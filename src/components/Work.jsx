@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -122,42 +122,124 @@ const photos = [
   { src: `${BASE}img/source/work-117.webp`, alt: 'Leather restoration and repair complete' },
 ];
 
+function useCols() {
+  const [cols, setCols] = useState(3);
+  useEffect(() => {
+    const update = () => {
+      if (window.innerWidth < 640) setCols(1);
+      else if (window.innerWidth < 1024) setCols(2);
+      else setCols(3);
+    };
+    update();
+    window.addEventListener('resize', update, { passive: true });
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return cols;
+}
+
 export default function Work() {
+  const cols = useCols();
+  const [start, setStart] = useState(0);
   const [lightbox, setLightbox] = useState(null);
+  const carouselRef = useRef(null);
 
-  const close = () => setLightbox(null);
-  const prev = () => setLightbox(i => (i - 1 + photos.length) % photos.length);
-  const next = () => setLightbox(i => (i + 1) % photos.length);
+  const maxStart = photos.length - cols;
 
-  const onKey = (e) => {
-    if (e.key === 'Escape') close();
-    if (e.key === 'ArrowLeft') prev();
-    if (e.key === 'ArrowRight') next();
+  useEffect(() => {
+    setStart(s => Math.min(s, maxStart));
+  }, [cols, maxStart]);
+
+  const goPrev = () => setStart(s => Math.max(0, s - 1));
+  const goNext = () => setStart(s => Math.min(maxStart, s + 1));
+
+  const onCarouselKey = (e) => {
+    if (lightbox !== null) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); }
   };
 
+  const closeLightbox = () => setLightbox(null);
+  const lbPrev = () => setLightbox(i => (i - 1 + photos.length) % photos.length);
+  const lbNext = () => setLightbox(i => (i + 1) % photos.length);
+
+  const onLightboxKey = (e) => {
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') lbPrev();
+    if (e.key === 'ArrowRight') lbNext();
+  };
+
+  const slideW = 100 / cols;
+  const translatePct = start * slideW;
+
   return (
-    <section id="work" className="section section--light">
+    <section id="work" className="section section--dark">
       <div className="wrap">
-        <p className="eyebrow eyebrow--dark">Our Work</p>
-        <h2 className="h2--dark">Real Project Photos</h2>
-        <p className="section-sub">
+        <p className="eyebrow">Our Work</p>
+        <h2>Real Project Photos</h2>
+        <p className="carousel__subtitle">
           Every job done on-site in Raleigh, NC and surrounding areas.
         </p>
 
-        <div className="photo-grid">
-          {photos.map((p, i) => (
-            <button
-              key={p.src}
-              className="photo-tile"
-              onClick={() => setLightbox(i)}
-              aria-label={`View photo: ${p.alt}`}
+        <div
+          className="carousel"
+          ref={carouselRef}
+          onKeyDown={onCarouselKey}
+          tabIndex={0}
+          aria-label="Project photo gallery"
+        >
+          <div className="carousel__viewport">
+            <div
+              className="carousel__track"
+              style={{ transform: `translateX(-${translatePct}%)` }}
+              aria-live="polite"
             >
-              <img src={p.src} alt={p.alt} loading="lazy" decoding="async" />
-              <span className="photo-tile__overlay" aria-hidden="true">
-                <span className="photo-tile__zoom">⊕</span>
-              </span>
+              {photos.map((p, i) => (
+                <div
+                  key={p.src}
+                  className="carousel__slide"
+                  style={{ flex: `0 0 ${slideW}%`, maxWidth: `${slideW}%` }}
+                >
+                  <button
+                    className="photo-tile"
+                    onClick={() => setLightbox(i)}
+                    aria-label={`Open photo ${i + 1}: ${p.alt}`}
+                  >
+                    <img
+                      src={p.src}
+                      alt={p.alt}
+                      loading={i < cols * 2 ? 'eager' : 'lazy'}
+                      decoding="async"
+                    />
+                    <span className="photo-tile__overlay" aria-hidden="true">
+                      <span className="photo-tile__zoom">⊕</span>
+                    </span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="carousel__controls">
+            <button
+              className="carousel__arrow"
+              onClick={goPrev}
+              disabled={start === 0}
+              aria-label="Previous photos"
+            >
+              &#8249;
             </button>
-          ))}
+            <span className="carousel__counter">
+              {start + 1} <span className="carousel__counter-sep">/</span> {photos.length}
+            </span>
+            <button
+              className="carousel__arrow"
+              onClick={goNext}
+              disabled={start >= maxStart}
+              aria-label="Next photos"
+            >
+              &#8250;
+            </button>
+          </div>
         </div>
 
         <div className="work-cta">
@@ -171,16 +253,16 @@ export default function Work() {
           role="dialog"
           aria-modal="true"
           aria-label="Photo viewer"
-          onKeyDown={onKey}
+          onKeyDown={onLightboxKey}
           tabIndex={-1}
           ref={el => el && el.focus()}
         >
-          <button className="lightbox__close" onClick={close} aria-label="Close">✕</button>
-          <button className="lightbox__prev" onClick={prev} aria-label="Previous photo">&#8249;</button>
+          <button className="lightbox__close" onClick={closeLightbox} aria-label="Close">✕</button>
+          <button className="lightbox__prev" onClick={lbPrev} aria-label="Previous photo">&#8249;</button>
           <div className="lightbox__img-wrap">
             <img src={photos[lightbox].src} alt={photos[lightbox].alt} />
           </div>
-          <button className="lightbox__next" onClick={next} aria-label="Next photo">&#8250;</button>
+          <button className="lightbox__next" onClick={lbNext} aria-label="Next photo">&#8250;</button>
           <p className="lightbox__caption">{lightbox + 1} / {photos.length}</p>
         </div>
       )}

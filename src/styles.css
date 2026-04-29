@@ -1293,3 +1293,27 @@ section[id],
     scroll-margin-top: 82px;
   }
 }
+
+/* Final overflow guard: prevent accidental horizontal scroll on desktop/mobile */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+main,
+section,
+.site,
+.app {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}

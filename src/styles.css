@@ -618,7 +618,35 @@ h3 {
 
 .file-input {
   cursor: pointer;
+  background: var(--dark3);
+  border: 1px dashed rgba(255,255,255,0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.6);
+  font-family: inherit;
+  width: 100%;
+  transition: border-color 0.15s;
 }
+
+.file-input:hover { border-color: rgba(233,4,42,0.5); }
+.file-input:focus { outline: none; border-color: var(--red); }
+
+.file-input::file-selector-button {
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-right: 12px;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.file-input::file-selector-button:hover { background: var(--red-dark); }
 
 .file-names {
   font-size: 13px;

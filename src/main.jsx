@@ -9,6 +9,7 @@ import RepairList from './components/RepairList';
 import About from './components/About';
 import Reviews from './components/Reviews';
 import QuoteForm from './components/QuoteForm';
+import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <RepairList />
         <About />
         <Reviews />
+        <FAQ />
         <QuoteForm />
       </main>
       <Footer />

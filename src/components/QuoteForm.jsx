@@ -8,18 +8,44 @@ const INITIAL = {
   comments: '',
 };
 
+function FileUpload({ files, onChange }) {
+  const ref = useRef(null);
+
+  const label =
+    files.length === 0 ? 'No files selected' :
+    files.length === 1 ? '1 file selected' :
+    `${files.length} files selected`;
+
+  return (
+    <div className="file-upload">
+      <button
+        type="button"
+        className="file-upload__btn"
+        onClick={() => ref.current && ref.current.click()}
+      >
+        Choose photos
+      </button>
+      <span className="file-upload__status">{label}</span>
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={e => onChange(Array.from(e.target.files).slice(0, 3))}
+        className="file-upload__hidden"
+        tabIndex={-1}
+        aria-hidden="true"
+      />
+    </div>
+  );
+}
+
 export default function QuoteForm() {
   const [fields, setFields] = useState(INITIAL);
   const [files, setFiles] = useState([]);
-  const [status, setStatus] = useState('idle'); // idle | sending | success | error
-  const fileRef = useRef(null);
+  const [status, setStatus] = useState('idle');
 
   const set = (k) => (e) => setFields(f => ({ ...f, [k]: e.target.value }));
-
-  const onFiles = (e) => {
-    const picked = Array.from(e.target.files).slice(0, 3);
-    setFiles(picked);
-  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -48,7 +74,6 @@ export default function QuoteForm() {
       setStatus('success');
       setFields(INITIAL);
       setFiles([]);
-      if (fileRef.current) fileRef.current.value = '';
     } catch {
       setStatus('error');
     }
@@ -71,92 +96,44 @@ export default function QuoteForm() {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="name">Name</label>
-              <input
-                id="name"
-                type="text"
-                placeholder="Your name"
-                value={fields.name}
-                onChange={set('name')}
-              />
+              <input id="name" type="text" placeholder="Your name" value={fields.name} onChange={set('name')} />
             </div>
             <div className="form-group">
               <label htmlFor="phone">Phone Number <span className="req">*</span></label>
-              <input
-                id="phone"
-                type="tel"
-                placeholder="(843) 000-0000"
-                value={fields.phone}
-                onChange={set('phone')}
-                required
-              />
+              <input id="phone" type="tel" placeholder="(843) 000-0000" value={fields.phone} onChange={set('phone')} required />
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="email">Email <span className="req">*</span></label>
-              <input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={fields.email}
-                onChange={set('email')}
-                required
-              />
+              <input id="email" type="email" placeholder="you@example.com" value={fields.email} onChange={set('email')} required />
             </div>
             <div className="form-group">
               <label htmlFor="zip">Zip Code</label>
-              <input
-                id="zip"
-                type="text"
-                placeholder="27605"
-                value={fields.zip}
-                onChange={set('zip')}
-              />
+              <input id="zip" type="text" placeholder="27605" value={fields.zip} onChange={set('zip')} />
             </div>
           </div>
 
           <div className="form-group">
             <label htmlFor="comments">Comments</label>
-            <textarea
-              id="comments"
-              rows={4}
-              placeholder="Describe what needs to be repaired..."
-              value={fields.comments}
-              onChange={set('comments')}
-            />
+            <textarea id="comments" rows={4} placeholder="Describe what needs to be repaired..." value={fields.comments} onChange={set('comments')} />
           </div>
 
           <div className="form-group">
-            <label htmlFor="files">Upload Photos (up to 3)</label>
-            <input
-              id="files"
-              type="file"
-              accept="image/*"
-              multiple
-              ref={fileRef}
-              onChange={onFiles}
-              className="file-input"
-            />
+            <label>Upload Photos (up to 3)</label>
+            <FileUpload files={files} onChange={setFiles} />
             {files.length > 0 && (
               <p className="file-names">{files.map(f => f.name).join(', ')}</p>
             )}
           </div>
 
-          <button
-            type="submit"
-            className="btn btn--primary btn--lg btn--full"
-            disabled={status === 'sending'}
-          >
+          <button type="submit" className="btn btn--primary btn--lg btn--full" disabled={status === 'sending'}>
             {status === 'sending' ? 'Sending…' : 'Request a Quote'}
           </button>
 
-          {status === 'success' && (
-            <p className="form-msg form-msg--success">Sent successfully ✅</p>
-          )}
-          {status === 'error' && (
-            <p className="form-msg form-msg--error">Could not send. Please call or text us.</p>
-          )}
+          {status === 'success' && <p className="form-msg form-msg--success">Sent successfully ✅</p>}
+          {status === 'error' && <p className="form-msg form-msg--error">Could not send. Please call or text us.</p>}
         </form>
       </div>
     </section>

@@ -1,13 +1,17 @@
 import React from 'react';
 
+const BASE = import.meta.env.BASE_URL;
+
 const services = [
   {
-    icon: '🚗',
+    img: `${BASE}img/svc-car.webp`,
+    imgAlt: 'Car interior leather color restoration',
     title: 'Auto Interior Color Restoration',
     desc: 'We recolor and restore worn car interiors — seats, armrests, and more. Fixing fading, scuffs, and scratches.',
   },
   {
-    icon: '🛋️',
+    img: `${BASE}img/svc-couch.webp`,
+    imgAlt: 'Leather couch recoloring result',
     title: 'Leather Couch Recoloring',
     desc: 'We recolor and restore worn leather couches. Fixing fading, scratches, and worn areas.',
   },
@@ -32,7 +36,10 @@ export default function Services() {
         <div className="services-grid">
           {services.map((s) => (
             <div className="service-card" key={s.title}>
-              <div className="service-card__icon">{s.icon}</div>
+              {s.img
+                ? <img src={s.img} alt={s.imgAlt} className="service-card__img" loading="lazy" />
+                : <span className="service-card__icon">{s.icon}</span>
+              }
               <h3 className="service-card__title">{s.title}</h3>
               <p className="service-card__desc">{s.desc}</p>
             </div>

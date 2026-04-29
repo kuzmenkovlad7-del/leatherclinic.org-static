@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 
-const REMOVED_PHOTO_NUMBERS = new Set([5, 13, 17]);
+const REMOVED_PHOTO_NUMBERS = new Set([5, 12, 13, 14, 15, 17]);
 
-const projectPhotos = Array.from({ length: 117 }, (_, index) => index + 1)
+const projectPhotos = Array.from({ length: 213 }, (_, index) => index + 1)
   .filter((number) => !REMOVED_PHOTO_NUMBERS.has(number))
   .map((number) => {
     const fileNumber = String(number).padStart(2, '0');

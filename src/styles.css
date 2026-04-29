@@ -70,7 +70,7 @@ a { text-decoration: none; color: inherit; }
 h1 {
   font-size: clamp(42px, 7vw, 88px);
   line-height: 0.95;
-  font-weight: 900;
+  font-weight: 800;
   margin: 0 0 20px;
   letter-spacing: -0.02em;
 }
@@ -78,7 +78,7 @@ h1 {
 h2 {
   font-size: clamp(32px, 5vw, 62px);
   line-height: 1.05;
-  font-weight: 900;
+  font-weight: 800;
   margin: 0 0 20px;
   letter-spacing: -0.02em;
 }
@@ -236,11 +236,19 @@ h3 {
 .hero__bg {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse 60% 60% at 80% 20%, rgba(233,4,42,0.18) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(233,4,42,0.08) 0%, transparent 50%),
-    linear-gradient(160deg, #050505 0%, #0c0c0c 50%, #080808 100%);
+  background-size: cover;
+  background-position: center 30%;
+  background-repeat: no-repeat;
   z-index: 0;
+}
+
+.hero__bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, rgba(5,5,5,0.92) 0%, rgba(5,5,5,0.75) 50%, rgba(5,5,5,0.45) 100%),
+    radial-gradient(ellipse 50% 60% at 85% 20%, rgba(233,4,42,0.15) 0%, transparent 60%);
 }
 
 .hero__inner {
@@ -286,6 +294,15 @@ h3 {
 
 .service-card__icon {
   font-size: 36px;
+  margin-bottom: 18px;
+  display: block;
+}
+
+.service-card__img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 10px;
   margin-bottom: 18px;
   display: block;
 }

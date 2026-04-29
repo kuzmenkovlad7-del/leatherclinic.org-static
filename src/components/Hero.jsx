@@ -1,9 +1,15 @@
 import React from 'react';
 
+const BASE = import.meta.env.BASE_URL;
+
 export default function Hero() {
   return (
     <section className="hero">
-      <div className="hero__bg" aria-hidden="true" />
+      <div
+        className="hero__bg"
+        aria-hidden="true"
+        style={{ backgroundImage: `url(${BASE}img/hero-bg.webp)` }}
+      />
       <div className="wrap hero__inner">
         <p className="eyebrow">Leather Clinic Raleigh, NC</p>
         <h1>Leather Recoloring<br />&amp; Restoration</h1>

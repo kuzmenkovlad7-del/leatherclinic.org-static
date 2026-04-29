@@ -1,18 +1,27 @@
 import { useEffect, useMemo, useState } from 'react';
 
-const REMOVED_PHOTO_NUMBERS = new Set([5, 12, 13, 14, 15, 17]);
+// Curated sequence matching original Weblium gallery order.
+// Rejected photos (5, 12, 15 and any not in the original gallery) are excluded.
+const PHOTO_SEQUENCE = [
+    1,   2,   3,  16,   4,  20,   6,  18,   7, 118,
+  123,   8, 129, 125, 128, 126, 132, 127, 131, 130,
+  122, 120, 119,   9,  36,  34,  37,  35,  38, 133,
+  148, 134,  10,  11, 149, 137, 138, 140, 141, 143,
+  142, 145, 150, 144, 146, 147,  54, 174, 173, 172,
+  171, 170, 169, 168, 167, 166, 165, 164, 163, 162,
+  161, 160, 159, 158, 157, 156, 155, 154, 153, 152,
+  151, 176, 175, 177, 178, 180, 179, 181, 182, 184,
+  183, 185, 186, 187, 191, 188, 189, 190, 192, 193,
+  194, 100, 101, 195, 102, 103, 105, 104, 106, 108,
+  107, 112, 109, 113, 111, 110, 115, 114, 116, 117,
+];
 
-const projectPhotos = Array.from({ length: 213 }, (_, index) => index + 1)
-  .filter((number) => !REMOVED_PHOTO_NUMBERS.has(number))
-  .map((number) => {
-    const fileNumber = String(number).padStart(2, '0');
+const BASE = import.meta.env.BASE_URL;
 
-    return {
-      number,
-      src: `${import.meta.env.BASE_URL}img/source/work-${fileNumber}.webp`,
-      alt: `Leather Clinic real project photo ${number}`,
-    };
-  });
+const projectPhotos = PHOTO_SEQUENCE.map((n) => ({
+  src: `${BASE}img/source/work-${String(n).padStart(2, '0')}.webp`,
+  alt: `Leather Clinic project photo ${n}`,
+}));
 
 function getVisibleCount() {
   if (typeof window === 'undefined') return 3;

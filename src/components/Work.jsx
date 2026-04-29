@@ -1,12 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 
-// Curated sequence: 47 strongest photos, grouped by batch, low-quality removed.
+// 110 real project photos from the original Weblium gallery, de-aliased to
+// their canonical work-01..117 file numbers (work-118..213 are all duplicates).
+// Excluded: 5, 12, 13, 14, 15 (client-marked red-X), 17 (= svc-stitch service image),
+// 19 (tiny 53KB landscape, service image duplicate).
+// Order: couch photos lead, then car interior, then rest in original Weblium curator order.
 const PHOTO_SEQUENCE = [
-    1,   2,   3,   4,  20,   6,   7, 118, 123,   8,
-  125, 132, 131, 120, 119,   9,  36,  37,  35,  38,
-  148, 134, 149, 137, 143, 145, 150,  54, 173, 170,
-  163, 162, 157, 155, 154, 152, 176, 185, 100, 102,
-  103, 108, 107, 113, 111, 110, 114,
+    2,  1,  3, 16,  4, 20,  6, 18,  7, 21,
+   25,  8, 30, 26, 29, 27, 33, 28, 32, 31,
+   24, 23, 22,  9, 36, 34, 37, 35, 38, 39,
+   51, 40, 10, 11, 52, 41, 42, 43, 44, 46,
+   45, 48, 53, 47, 49, 50, 54, 78, 77, 76,
+   75, 74, 73, 72, 71, 70, 69, 68, 67, 66,
+   65, 64, 63, 62, 61, 60, 59, 58, 57, 56,
+   55, 80, 79, 81, 82, 84, 83, 85, 86, 88,
+   87, 89, 90, 91, 95, 92, 93, 94, 96, 97,
+   98,100,101, 99,102,103,105,104,106,108,
+  107,112,109,113,111,110,115,114,116,117,
 ];
 
 const BASE = import.meta.env.BASE_URL;
@@ -17,9 +27,10 @@ const projectPhotos = PHOTO_SEQUENCE.map((n) => ({
 }));
 
 function getVisibleCount() {
-  if (typeof window === 'undefined') return 2;
+  if (typeof window === 'undefined') return 3;
   if (window.innerWidth < 640) return 1;
-  return 2;
+  if (window.innerWidth < 1024) return 2;
+  return 3;
 }
 
 function useVisibleCount() {

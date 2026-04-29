@@ -677,6 +677,13 @@ h3 {
   pointer-events: none;
 }
 
+.file-upload__error {
+  font-size: 13px;
+  color: #ff6b6b;
+  margin: 6px 0 0;
+  font-weight: 600;
+}
+
 .file-names {
   font-size: 13px;
   color: rgba(255,255,255,0.5);

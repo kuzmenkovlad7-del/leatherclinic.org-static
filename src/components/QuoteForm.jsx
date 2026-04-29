@@ -8,7 +8,9 @@ const INITIAL = {
   comments: '',
 };
 
-function FileUpload({ files, onChange }) {
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+function FileUpload({ files, onChange, error, onError }) {
   const ref = useRef(null);
 
   const label =
@@ -16,26 +18,41 @@ function FileUpload({ files, onChange }) {
     files.length === 1 ? '1 file selected' :
     `${files.length} files selected`;
 
+  const handleChange = (e) => {
+    const picked = Array.from(e.target.files).slice(0, 3);
+    const invalid = picked.filter(f => !ALLOWED_TYPES.includes(f.type));
+    if (invalid.length > 0) {
+      onError(`Unsupported file type: ${invalid.map(f => f.name).join(', ')}. Please upload JPEG, PNG, or WebP images only.`);
+      e.target.value = '';
+      return;
+    }
+    onError('');
+    onChange(picked);
+  };
+
   return (
-    <div className="file-upload">
-      <button
-        type="button"
-        className="file-upload__btn"
-        onClick={() => ref.current && ref.current.click()}
-      >
-        Choose photos
-      </button>
-      <span className="file-upload__status">{label}</span>
-      <input
-        ref={ref}
-        type="file"
-        accept="image/*"
-        multiple
-        onChange={e => onChange(Array.from(e.target.files).slice(0, 3))}
-        className="file-upload__hidden"
-        tabIndex={-1}
-        aria-hidden="true"
-      />
+    <div className="file-upload-wrap">
+      <div className="file-upload">
+        <button
+          type="button"
+          className="file-upload__btn"
+          onClick={() => ref.current && ref.current.click()}
+        >
+          Choose photos
+        </button>
+        <span className="file-upload__status">{label}</span>
+        <input
+          ref={ref}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          onChange={handleChange}
+          className="file-upload__hidden"
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+      </div>
+      {error && <p className="file-upload__error">{error}</p>}
     </div>
   );
 }
@@ -43,6 +60,7 @@ function FileUpload({ files, onChange }) {
 export default function QuoteForm() {
   const [fields, setFields] = useState(INITIAL);
   const [files, setFiles] = useState([]);
+  const [fileError, setFileError] = useState('');
   const [status, setStatus] = useState('idle');
 
   const set = (k) => (e) => setFields(f => ({ ...f, [k]: e.target.value }));
@@ -122,7 +140,7 @@ export default function QuoteForm() {
 
           <div className="form-group">
             <label>Upload Photos (up to 3)</label>
-            <FileUpload files={files} onChange={setFiles} />
+            <FileUpload files={files} onChange={setFiles} error={fileError} onError={setFileError} />
             {files.length > 0 && (
               <p className="file-names">{files.map(f => f.name).join(', ')}</p>
             )}

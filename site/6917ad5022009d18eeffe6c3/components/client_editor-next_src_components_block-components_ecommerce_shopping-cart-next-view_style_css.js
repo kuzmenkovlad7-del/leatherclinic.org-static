@@ -1,1 +1,0 @@
-(self.webpackChunksite_render=self.webpackChunksite_render||[]).push([["client_editor-next_src_components_block-components_ecommerce_shopping-cart-next-view_style_css"],{"../client/editor-next/src/components/block-components/ecommerce/shopping-cart-next-view/style.css":e=>{e.exports={hidden:"hidden_3ih",rotation:"rotation_2G-"}}}]);

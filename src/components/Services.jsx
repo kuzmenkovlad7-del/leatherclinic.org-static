@@ -16,12 +16,14 @@ const services = [
     desc: 'We recolor and restore worn leather couches. Fixing fading, scratches, and worn areas.',
   },
   {
-    icon: '💺',
+    img: `${BASE}img/svc-cushion.webp`,
+    imgAlt: 'Cushion refilling for sofas and chairs',
     title: 'Cushion Refilling',
     desc: 'We refill cushions for sofas and chairs to improve comfort, shape, and support.',
   },
   {
-    icon: '🪡',
+    img: `${BASE}img/svc-stitch.webp`,
+    imgAlt: 'Stitching and reupholstery service',
     title: 'Stitching & Reupholstery',
     desc: 'We repair stitching and can reupholster cushions and dining chairs with new material if needed.',
   },

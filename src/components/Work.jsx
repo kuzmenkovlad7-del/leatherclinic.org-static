@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 
+const BASE = import.meta.env.BASE_URL;
+
 const photos = [
-  { src: '/img/source/work-01.webp', alt: 'Leather seat recoloring — car interior restoration' },
-  { src: '/img/source/work-02.webp', alt: 'Leather couch repair and recoloring' },
-  { src: '/img/source/work-03.webp', alt: 'Auto interior leather restoration' },
-  { src: '/img/source/work-04.webp', alt: 'Car seat leather color restoration' },
-  { src: '/img/source/work-05.webp', alt: 'Furniture leather recoloring result' },
-  { src: '/img/source/work-06.webp', alt: 'Leather repair — sofa restoration' },
-  { src: '/img/source/work-07.webp', alt: 'Cushion refilling and upholstery repair' },
-  { src: '/img/source/work-08.webp', alt: 'Leather furniture scratch repair' },
-  { src: '/img/source/work-09.webp', alt: 'Car interior color restoration complete' },
-  { src: '/img/source/work-10.webp', alt: 'Leather couch restoration' },
-  { src: '/img/source/work-11.webp', alt: 'Sofa leather recoloring' },
-  { src: '/img/source/work-12.webp', alt: 'Stitching and reupholstery work' },
+  { src: `${BASE}img/source/work-01.webp`, alt: 'Leather seat recoloring — car interior restoration' },
+  { src: `${BASE}img/source/work-02.webp`, alt: 'Leather couch repair and recoloring' },
+  { src: `${BASE}img/source/work-03.webp`, alt: 'Auto interior leather restoration' },
+  { src: `${BASE}img/source/work-04.webp`, alt: 'Car seat leather color restoration' },
+  { src: `${BASE}img/source/work-05.webp`, alt: 'Furniture leather recoloring result' },
+  { src: `${BASE}img/source/work-06.webp`, alt: 'Leather repair — sofa restoration' },
+  { src: `${BASE}img/source/work-07.webp`, alt: 'Cushion refilling and upholstery repair' },
+  { src: `${BASE}img/source/work-08.webp`, alt: 'Leather furniture scratch repair' },
+  { src: `${BASE}img/source/work-09.webp`, alt: 'Car interior color restoration complete' },
+  { src: `${BASE}img/source/work-10.webp`, alt: 'Leather couch restoration' },
+  { src: `${BASE}img/source/work-11.webp`, alt: 'Sofa leather recoloring' },
+  { src: `${BASE}img/source/work-12.webp`, alt: 'Stitching and reupholstery work' },
 ];
 
 export default function Work() {
@@ -45,14 +47,9 @@ export default function Work() {
               onClick={() => setLightbox(i)}
               aria-label={`View photo: ${p.alt}`}
             >
-              <img
-                src={p.src}
-                alt={p.alt}
-                loading="lazy"
-                decoding="async"
-              />
+              <img src={p.src} alt={p.alt} loading="lazy" decoding="async" />
               <span className="photo-tile__overlay" aria-hidden="true">
-                <span className="photo-tile__zoom">&#9654;</span>
+                <span className="photo-tile__zoom">⊕</span>
               </span>
             </button>
           ))}

@@ -1274,3 +1274,22 @@ h3 {
     right: 14px;
   }
 }
+
+/* Final anchor polish: keep sticky header from covering section headings */
+section[id],
+#services,
+#work,
+#reviews,
+#book {
+  scroll-margin-top: 96px;
+}
+
+@media (max-width: 700px) {
+  section[id],
+  #services,
+  #work,
+  #reviews,
+  #book {
+    scroll-margin-top: 82px;
+  }
+}

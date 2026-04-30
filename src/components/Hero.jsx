@@ -12,7 +12,7 @@ export default function Hero() {
       />
       <div className="wrap hero__inner">
         <p className="eyebrow">Leather Clinic Raleigh, NC</p>
-        <h1>Leather Recoloring<br />&amp; Restoration</h1>
+        <h1>Leather Furniture Repair<br />&amp; Car Interiors<br />Upholstery Services</h1>
         <p className="lead">
           Mobile leather repair, furniture recoloring, car interior restoration,
           cushion refilling and upholstery services.

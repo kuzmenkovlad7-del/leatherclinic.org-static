@@ -68,8 +68,8 @@ a { text-decoration: none; color: inherit; }
 .eyebrow--dark { color: var(--red); }
 
 h1 {
-  font-size: clamp(42px, 7vw, 88px);
-  line-height: 0.95;
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 1.1;
   font-weight: 800;
   margin: 0 0 20px;
   letter-spacing: -0.02em;
@@ -237,7 +237,7 @@ h3 {
   position: absolute;
   inset: 0;
   background-size: cover;
-  background-position: center 30%;
+  background-position: center center;
   background-repeat: no-repeat;
   z-index: 0;
 }
@@ -954,6 +954,7 @@ h3 {
 @media (max-width: 700px) {
   .section { padding: 72px 0; }
   .hero { padding: 120px 0 64px; }
+  .hero__bg { background-position: center center; }
 
   .nav {
     position: fixed;

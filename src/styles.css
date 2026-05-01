@@ -307,6 +307,24 @@ h3 {
   display: block;
 }
 
+.service-card__img-pair {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  margin-bottom: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.service-card__img-pair img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .service-card__title {
   font-size: 18px;
   font-weight: 800;
@@ -1352,6 +1370,25 @@ svg {
   margin-bottom: 28px;
 }
 
+.service-card__img-pair {
+  width: 100%;
+  height: 180px;
+  max-height: 180px;
+  border-radius: 14px;
+  margin-bottom: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.service-card__img-pair img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 @media (max-width: 1100px) {
   .services-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1369,6 +1406,11 @@ svg {
   }
 
   .service-card__img {
+    height: 190px;
+    max-height: 190px;
+  }
+
+  .service-card__img-pair {
     height: 190px;
     max-height: 190px;
   }

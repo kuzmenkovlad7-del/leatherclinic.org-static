@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 
 const INITIAL = {
   name: '',
@@ -63,9 +63,6 @@ export default function QuoteForm() {
   const [fileError, setFileError] = useState('');
   const [status, setStatus] = useState('idle');
 
-  const fieldsRef = useRef(INITIAL);
-  useEffect(() => { fieldsRef.current = fields; }, [fields]);
-
   const set = (k) => (e) => {
     const val = e.target.value;
     setFields(prev => ({ ...prev, [k]: val }));
@@ -75,13 +72,13 @@ export default function QuoteForm() {
     e.preventDefault();
     setStatus('sending');
 
-    const currentFields = fieldsRef.current;
+    const domValues = new FormData(e.currentTarget);
     const fieldsJson = JSON.stringify({
-      short_text: { title: 'Name', type: 'short_text', value: currentFields.name },
-      contactForm_phoneNumber: { title: 'Phone', type: 'phone', value: currentFields.phone },
-      contactForm_email: { title: 'Email', type: 'email', value: currentFields.email },
-      '11ce3fc7-015d-4c01-9976-1b6949db3619': { title: 'Zip code', type: 'short_text', value: currentFields.zip },
-      'a5f36c2a-78b4-4f4b-b8f7-c8c81b8b0189': { title: 'Comments', type: 'long_text', value: currentFields.comments },
+      short_text: { title: 'Name', type: 'short_text', value: domValues.get('name') ?? '' },
+      contactForm_phoneNumber: { title: 'Phone', type: 'phone', value: domValues.get('phone') ?? '' },
+      contactForm_email: { title: 'Email', type: 'email', value: domValues.get('email') ?? '' },
+      '11ce3fc7-015d-4c01-9976-1b6949db3619': { title: 'Zip code', type: 'short_text', value: domValues.get('zip') ?? '' },
+      'a5f36c2a-78b4-4f4b-b8f7-c8c81b8b0189': { title: 'Comments', type: 'long_text', value: domValues.get('comments') ?? '' },
     });
 
     const fd = new FormData();
@@ -121,28 +118,28 @@ export default function QuoteForm() {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="name">Name</label>
-              <input id="name" type="text" placeholder="Your name" value={fields.name} onChange={set('name')} />
+              <input id="name" name="name" type="text" placeholder="Your name" value={fields.name} onChange={set('name')} />
             </div>
             <div className="form-group">
               <label htmlFor="phone">Phone Number <span className="req">*</span></label>
-              <input id="phone" type="tel" placeholder="(843) 000-0000" value={fields.phone} onChange={set('phone')} required />
+              <input id="phone" name="phone" type="tel" placeholder="(843) 000-0000" value={fields.phone} onChange={set('phone')} required />
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="email">Email <span className="req">*</span></label>
-              <input id="email" type="email" placeholder="you@example.com" value={fields.email} onChange={set('email')} required />
+              <input id="email" name="email" type="email" placeholder="you@example.com" value={fields.email} onChange={set('email')} required />
             </div>
             <div className="form-group">
               <label htmlFor="zip">Zip Code</label>
-              <input id="zip" type="text" placeholder="27605" value={fields.zip} onChange={set('zip')} />
+              <input id="zip" name="zip" type="text" placeholder="27605" value={fields.zip} onChange={set('zip')} />
             </div>
           </div>
 
           <div className="form-group">
             <label htmlFor="comments">Comments</label>
-            <textarea id="comments" rows={4} placeholder="Describe what needs to be repaired..." value={fields.comments} onChange={set('comments')} />
+            <textarea id="comments" name="comments" rows={4} placeholder="Describe what needs to be repaired..." value={fields.comments} onChange={set('comments')} />
           </div>
 
           <div className="form-group">

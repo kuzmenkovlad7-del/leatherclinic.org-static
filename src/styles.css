@@ -961,7 +961,7 @@ h3 {
 @media (max-width: 700px) {
   .section { padding: 72px 0; }
   .hero { padding: 120px 0 64px; }
-  .hero__bg { background-position: center center; }
+  .hero__bg { background-position: 70% center; }
 
   .nav {
     position: fixed;

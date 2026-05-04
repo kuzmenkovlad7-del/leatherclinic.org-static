@@ -20,13 +20,28 @@ const clientPhotos = [
   { src: `${BASE}img/client/lc-client-extra-14.jpg`, alt: 'Dining chair — after reupholstery' },
 ];
 
-// 4 verified good source photos (curated top picks)
-const sourcePhotos = [1, 2, 3, 4].map((n) => ({
+// 110 canonical source photos — curated order from commit f42f227.
+// work-118..213 are all duplicates of work-01..117; excluded here.
+const SOURCE_SEQ = [
+    2,  1,  3, 16,  4, 20,  6, 18,  7, 21,
+   25,  8, 30, 26, 29, 27, 33, 28, 32, 31,
+   24, 23, 22,  9, 36, 34, 37, 35, 38, 39,
+   51, 40, 10, 11, 52, 41, 42, 43, 44, 46,
+   45, 48, 53, 47, 49, 50, 54, 78, 77, 76,
+   75, 74, 73, 72, 71, 70, 69, 68, 67, 66,
+   65, 64, 63, 62, 61, 60, 59, 58, 57, 56,
+   55, 80, 79, 81, 82, 84, 83, 85, 86, 88,
+   87, 89, 90, 91, 95, 92, 93, 94, 96, 97,
+   98, 100, 101,  99, 102, 103, 105, 104, 106, 108,
+  107, 112, 109, 113, 111, 110, 115, 114, 116, 117,
+];
+
+const sourcePhotos = SOURCE_SEQ.map((n) => ({
   src: `${BASE}img/source/work-${String(n).padStart(2, '0')}.webp`,
   alt: `Leather Clinic project photo ${n}`,
 }));
 
-// Total: 18 gallery photos
+// Total: 124 photos (14 client + 110 source)
 const allPhotos = [...clientPhotos, ...sourcePhotos];
 
 function getVisibleCount() {

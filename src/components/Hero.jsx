@@ -8,14 +8,12 @@ export default function Hero() {
       <div
         className="hero__bg"
         aria-hidden="true"
-        style={{ backgroundImage: `url(${BASE}img/hero-bg.webp)` }}
+        style={{ backgroundImage: `url(${BASE}img/hero-client-dog-cat-couch.jpg)` }}
       />
       <div className="wrap hero__inner">
-        <p className="eyebrow">Leather Clinic Raleigh, NC</p>
-        <h1>Leather Furniture Repair<br />&amp; Car Interiors<br />Upholstery Services</h1>
-        <p className="lead">
-          Mobile leather repair, furniture recoloring, car interior restoration,
-          cushion refilling and upholstery services.
+        <h1>Leather Furniture<br />Repair</h1>
+        <p className="hero__sub">
+          Recoloring&nbsp;•&nbsp;Cushion Refilling&nbsp;•&nbsp;Tear &amp; Scratch Repair
         </p>
         <div className="actions">
           <a className="btn btn--primary btn--lg" href="#book">Request Now</a>

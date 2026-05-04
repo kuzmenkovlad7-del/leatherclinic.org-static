@@ -1,13 +1,5 @@
 import React, { useState, useRef } from 'react';
 
-const INITIAL = {
-  name: '',
-  phone: '',
-  email: '',
-  zip: '',
-  comments: '',
-};
-
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 function FileUpload({ files, onChange, error, onError }) {
@@ -58,27 +50,27 @@ function FileUpload({ files, onChange, error, onError }) {
 }
 
 export default function QuoteForm() {
-  const [fields, setFields] = useState(INITIAL);
+  const nameRef = useRef(null);
+  const phoneRef = useRef(null);
+  const emailRef = useRef(null);
+  const zipRef = useRef(null);
+  const commentsRef = useRef(null);
+  const formRef = useRef(null);
+
   const [files, setFiles] = useState([]);
   const [fileError, setFileError] = useState('');
   const [status, setStatus] = useState('idle');
-
-  const set = (k) => (e) => {
-    const val = e.target.value;
-    setFields(prev => ({ ...prev, [k]: val }));
-  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setStatus('sending');
 
-    const domValues = new FormData(e.currentTarget);
     const fieldsJson = JSON.stringify({
-      short_text: { title: 'Name', type: 'short_text', value: domValues.get('name') ?? '' },
-      contactForm_phoneNumber: { title: 'Phone', type: 'phone', value: domValues.get('phone') ?? '' },
-      contactForm_email: { title: 'Email', type: 'email', value: domValues.get('email') ?? '' },
-      '11ce3fc7-015d-4c01-9976-1b6949db3619': { title: 'Zip code', type: 'short_text', value: domValues.get('zip') ?? '' },
-      'a5f36c2a-78b4-4f4b-b8f7-c8c81b8b0189': { title: 'Comments', type: 'long_text', value: domValues.get('comments') ?? '' },
+      short_text: { title: 'Name', type: 'short_text', value: nameRef.current?.value ?? '' },
+      contactForm_phoneNumber: { title: 'Phone', type: 'phone', value: phoneRef.current?.value ?? '' },
+      contactForm_email: { title: 'Email', type: 'email', value: emailRef.current?.value ?? '' },
+      '11ce3fc7-015d-4c01-9976-1b6949db3619': { title: 'Zip code', type: 'short_text', value: zipRef.current?.value ?? '' },
+      'a5f36c2a-78b4-4f4b-b8f7-c8c81b8b0189': { title: 'Comments', type: 'long_text', value: commentsRef.current?.value ?? '' },
     });
 
     const fd = new FormData();
@@ -94,7 +86,7 @@ export default function QuoteForm() {
       const res = await fetch('/api/leatherclinic', { method: 'POST', body: fd });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setStatus('success');
-      setFields(INITIAL);
+      formRef.current?.reset();
       setFiles([]);
     } catch {
       setStatus('error');
@@ -114,32 +106,32 @@ export default function QuoteForm() {
           </div>
         </div>
 
-        <form className="quote-form" onSubmit={onSubmit} noValidate>
+        <form ref={formRef} className="quote-form" onSubmit={onSubmit} noValidate>
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="name">Name</label>
-              <input id="name" name="name" type="text" placeholder="Your name" value={fields.name} onChange={set('name')} />
+              <input ref={nameRef} id="name" type="text" placeholder="Your name" defaultValue="" />
             </div>
             <div className="form-group">
               <label htmlFor="phone">Phone Number <span className="req">*</span></label>
-              <input id="phone" name="phone" type="tel" placeholder="(843) 000-0000" value={fields.phone} onChange={set('phone')} required />
+              <input ref={phoneRef} id="phone" type="tel" placeholder="(843) 000-0000" defaultValue="" required />
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="email">Email <span className="req">*</span></label>
-              <input id="email" name="email" type="email" placeholder="you@example.com" value={fields.email} onChange={set('email')} required />
+              <input ref={emailRef} id="email" type="email" placeholder="you@example.com" defaultValue="" required />
             </div>
             <div className="form-group">
               <label htmlFor="zip">Zip Code</label>
-              <input id="zip" name="zip" type="text" placeholder="27605" value={fields.zip} onChange={set('zip')} />
+              <input ref={zipRef} id="zip" type="text" placeholder="27605" defaultValue="" />
             </div>
           </div>
 
           <div className="form-group">
             <label htmlFor="comments">Comments</label>
-            <textarea id="comments" name="comments" rows={4} placeholder="Describe what needs to be repaired..." value={fields.comments} onChange={set('comments')} />
+            <textarea ref={commentsRef} id="comments" rows={4} placeholder="Describe what needs to be repaired..." defaultValue="" />
           </div>
 
           <div className="form-group">

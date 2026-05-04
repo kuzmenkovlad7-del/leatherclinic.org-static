@@ -65,12 +65,18 @@ export default function QuoteForm() {
     e.preventDefault();
     setStatus('sending');
 
+    const name     = nameRef.current?.value?.trim()     || '';
+    const phone    = phoneRef.current?.value?.trim()    || '';
+    const email    = emailRef.current?.value?.trim()    || '';
+    const zip      = zipRef.current?.value?.trim()      || '';
+    const comments = commentsRef.current?.value?.trim() || '';
+
     const fieldsJson = JSON.stringify({
-      short_text: { title: 'Name', type: 'short_text', value: nameRef.current?.value ?? '' },
-      contactForm_phoneNumber: { title: 'Phone', type: 'phone', value: phoneRef.current?.value ?? '' },
-      contactForm_email: { title: 'Email', type: 'email', value: emailRef.current?.value ?? '' },
-      '11ce3fc7-015d-4c01-9976-1b6949db3619': { title: 'Zip code', type: 'short_text', value: zipRef.current?.value ?? '' },
-      'a5f36c2a-78b4-4f4b-b8f7-c8c81b8b0189': { title: 'Comments', type: 'long_text', value: commentsRef.current?.value ?? '' },
+      short_text: { title: 'Name', type: 'short_text', value: name },
+      contactForm_phoneNumber: { title: 'Phone', type: 'phone', value: phone },
+      contactForm_email: { title: 'Email', type: 'email', value: email },
+      '11ce3fc7-015d-4c01-9976-1b6949db3619': { title: 'Zip code', type: 'short_text', value: zip },
+      'a5f36c2a-78b4-4f4b-b8f7-c8c81b8b0189': { title: 'Comments', type: 'long_text', value: comments },
     });
 
     const fd = new FormData();
@@ -78,6 +84,11 @@ export default function QuoteForm() {
     fd.append('page_url', window.location.href);
     fd.append('meta', JSON.stringify({ source: 'react-site', userAgent: navigator.userAgent }));
     fd.append('fields', fieldsJson);
+    fd.append('name', name);
+    fd.append('phone', phone);
+    fd.append('email', email);
+    fd.append('zip', zip);
+    fd.append('comments', comments);
     ['file1', 'file2', 'file3'].forEach((key, i) => {
       if (files[i]) fd.append(key, files[i]);
     });

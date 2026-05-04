@@ -34,17 +34,21 @@ async function main() {
     const boundary = boundaryMatch ? boundaryMatch[1] : null;
 
     let fieldsJson = null;
+    const flat = {};
     if (boundary && postData) {
       const body = postData.toString('latin1');
       const parts = body.split('--' + boundary);
       for (const part of parts) {
-        const nameMatch = part.match(/Content-Disposition:[^\r\n]*name="fields"/i);
-        if (nameMatch) {
-          // Value is after the double CRLF header separator
-          const valueStart = part.indexOf('\r\n\r\n');
-          if (valueStart !== -1) {
-            fieldsJson = part.slice(valueStart + 4).replace(/\r\n$/, '');
-          }
+        const dispMatch = part.match(/Content-Disposition:[^\r\n]*name="([^"]+)"/i);
+        if (!dispMatch) continue;
+        const key = dispMatch[1];
+        const valueStart = part.indexOf('\r\n\r\n');
+        if (valueStart === -1) continue;
+        const value = part.slice(valueStart + 4).replace(/\r\n$/, '');
+        if (key === 'fields') {
+          fieldsJson = value;
+        } else if (['name', 'phone', 'email', 'zip', 'comments'].includes(key)) {
+          flat[key] = value;
         }
       }
     }
@@ -53,6 +57,7 @@ async function main() {
       contentType,
       hasFields: fieldsJson !== null,
       fields: fieldsJson ? JSON.parse(fieldsJson) : null,
+      flat,
     };
 
     // Fulfill with fake 200 — never reaches production
@@ -90,12 +95,22 @@ async function main() {
   console.log(JSON.stringify(capturedPayload.fields, null, 2));
 
   const f = capturedPayload.fields;
+  const flat = capturedPayload.flat;
+  console.log('\nflat fields:', flat);
+
   const checks = [
-    ['short_text.value', f?.short_text?.value, 'Website Test'],
-    ['contactForm_phoneNumber.value', f?.contactForm_phoneNumber?.value, '(843) 555-0199'],
-    ['contactForm_email.value', f?.contactForm_email?.value, 'test@example.com'],
-    ['zip.value', f?.['11ce3fc7-015d-4c01-9976-1b6949db3619']?.value, '27605'],
-    ['comments.value', f?.['a5f36c2a-78b4-4f4b-b8f7-c8c81b8b0189']?.value, 'Test request. Please ignore.'],
+    // fields JSON
+    ['fields.short_text.value',            f?.short_text?.value,                                          'Website Test'],
+    ['fields.contactForm_phoneNumber.value',f?.contactForm_phoneNumber?.value,                             '(843) 555-0199'],
+    ['fields.contactForm_email.value',      f?.contactForm_email?.value,                                   'test@example.com'],
+    ['fields.zip.value',                    f?.['11ce3fc7-015d-4c01-9976-1b6949db3619']?.value,            '27605'],
+    ['fields.comments.value',               f?.['a5f36c2a-78b4-4f4b-b8f7-c8c81b8b0189']?.value,           'Test request. Please ignore.'],
+    // flat fields
+    ['flat.name',     flat?.name,     'Website Test'],
+    ['flat.phone',    flat?.phone,    '(843) 555-0199'],
+    ['flat.email',    flat?.email,    'test@example.com'],
+    ['flat.zip',      flat?.zip,      '27605'],
+    ['flat.comments', flat?.comments, 'Test request. Please ignore.'],
   ];
 
   console.log('\n── Assertions ─────────────────────────────────────────────');

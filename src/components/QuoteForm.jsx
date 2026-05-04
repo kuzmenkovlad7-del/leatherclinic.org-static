@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 const INITIAL = {
   name: '',
@@ -63,18 +63,25 @@ export default function QuoteForm() {
   const [fileError, setFileError] = useState('');
   const [status, setStatus] = useState('idle');
 
-  const set = (k) => (e) => setFields(f => ({ ...f, [k]: e.target.value }));
+  const fieldsRef = useRef(INITIAL);
+  useEffect(() => { fieldsRef.current = fields; }, [fields]);
+
+  const set = (k) => (e) => {
+    const val = e.target.value;
+    setFields(prev => ({ ...prev, [k]: val }));
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setStatus('sending');
 
+    const currentFields = fieldsRef.current;
     const fieldsJson = JSON.stringify({
-      short_text: { title: 'Name', type: 'short_text', value: fields.name },
-      contactForm_phoneNumber: { title: 'Phone', type: 'phone', value: fields.phone },
-      contactForm_email: { title: 'Email', type: 'email', value: fields.email },
-      '11ce3fc7-015d-4c01-9976-1b6949db3619': { title: 'Zip code', type: 'short_text', value: fields.zip },
-      'a5f36c2a-78b4-4f4b-b8f7-c8c81b8b0189': { title: 'Comments', type: 'long_text', value: fields.comments },
+      short_text: { title: 'Name', type: 'short_text', value: currentFields.name },
+      contactForm_phoneNumber: { title: 'Phone', type: 'phone', value: currentFields.phone },
+      contactForm_email: { title: 'Email', type: 'email', value: currentFields.email },
+      '11ce3fc7-015d-4c01-9976-1b6949db3619': { title: 'Zip code', type: 'short_text', value: currentFields.zip },
+      'a5f36c2a-78b4-4f4b-b8f7-c8c81b8b0189': { title: 'Comments', type: 'long_text', value: currentFields.comments },
     });
 
     const fd = new FormData();

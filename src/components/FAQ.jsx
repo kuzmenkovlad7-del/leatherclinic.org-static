@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 const items = [
   {
     q: 'Where do you serve?',
-    a: 'We primarily serve Myrtle Beach, SC and the surrounding South Carolina area. We come to you: home, office, or dealership.',
+    a: 'We primarily serve Myrtle Beach, SC and surrounding South Carolina areas. We come to you: home, office, or dealership.',
   },
   {
     q: 'Do I need to bring my furniture or car to a shop?',

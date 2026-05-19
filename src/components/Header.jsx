@@ -22,7 +22,7 @@ export default function Header() {
       <div className="header__inner wrap">
         <a href="#" className="logo">
           <span className="logo__clinic">Leather Clinic</span>
-          <span className="logo__loc"> Raleigh, NC</span>
+          <span className="logo__loc"> Myrtle Beach, SC</span>
         </a>
 
         <nav className={`nav${menuOpen ? ' nav--open' : ''}`}>

@@ -136,7 +136,7 @@ export default function QuoteForm() {
             </div>
             <div className="form-group">
               <label htmlFor="zip">Zip Code</label>
-              <input ref={zipRef} id="zip" type="text" placeholder="27605" defaultValue="" />
+              <input ref={zipRef} id="zip" type="text" placeholder="29577" defaultValue="" />
             </div>
           </div>
 

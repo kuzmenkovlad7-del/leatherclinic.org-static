@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="wrap footer__inner">
         <div className="footer__brand">
           <p className="footer__logo">Leather Clinic</p>
-          <p className="footer__tagline">Raleigh, NC — Mobile Service</p>
+          <p className="footer__tagline">Myrtle Beach, SC — Mobile Service</p>
         </div>
 
         <div className="footer__cols">
@@ -18,8 +18,7 @@ export default function Footer() {
 
           <div className="footer__col">
             <p className="footer__heading">Address</p>
-            <p className="footer__text">2068 Clark Ave</p>
-            <p className="footer__text">Raleigh, NC 27605</p>
+            <p className="footer__text">Myrtle Beach, SC 29577</p>
             <p className="footer__text">United States</p>
           </div>
 
@@ -33,7 +32,7 @@ export default function Footer() {
 
       <div className="footer__bottom wrap">
         <p>© {new Date().getFullYear()} Leather Clinic LLC. All rights reserved.</p>
-        <p>Serving Raleigh, NC and surrounding areas.</p>
+        <p>Serving Myrtle Beach, SC and surrounding areas.</p>
       </div>
     </footer>
   );

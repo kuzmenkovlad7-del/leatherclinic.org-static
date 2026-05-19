@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leather Clinic — Gallery Sort</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f0f0f0;color:#111;min-height:100vh}
+header{position:sticky;top:0;z-index:100;background:#111;color:#fff;padding:10px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+header h1{font-size:15px;font-weight:800;letter-spacing:.01em}
+#stats{font-size:12px;color:#999;flex:1;min-width:200px}
+#stats b{color:#ef0038}
+.hbtn{padding:8px 18px;border-radius:6px;border:0;cursor:pointer;font-weight:700;font-size:13px;transition:.15s}
+.hbtn-export{background:#ef0038;color:#fff}
+.hbtn-export:hover{background:#c20030}
+.notice{background:#1e1e1e;color:#999;font-size:12px;padding:7px 18px;border-bottom:1px solid #2a2a2a}
+.notice span{color:#e9a000}
+
+/* grid */
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;padding:14px;max-width:1700px;margin:0 auto}
+
+/* card */
+.card{background:#fff;border-radius:10px;overflow:hidden;border:2px solid transparent;position:relative;transition:border-color .15s,opacity .15s,transform .1s;user-select:none}
+.card.locked{border-color:#e9a000}
+.card.removed{opacity:.30;border-color:#ccc}
+.card.dragging{opacity:.35;transform:scale(.97)}
+.card.drag-over{border-color:#ef0038;background:#fff5f7;transform:scale(1.02)}
+
+/* badge */
+.badge{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.72);color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;z-index:2;pointer-events:none}
+.card.locked .badge{background:#e9a000;color:#111}
+
+/* image */
+.card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#e8e8e8}
+
+/* label */
+.card-label{padding:5px 8px 3px;font-size:10px;color:#777;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* controls */
+.card-ctrl{display:flex;gap:3px;padding:3px 8px 8px}
+.card-ctrl button{flex:1;padding:4px 2px;font-size:11px;font-weight:700;border:1px solid #ddd;border-radius:4px;background:#f5f5f5;cursor:pointer;transition:.12s}
+.card-ctrl button:hover:not(:disabled){background:#e0e0e0}
+.card-ctrl button:disabled{opacity:.3;cursor:default}
+.btn-up,.btn-dn{max-width:36px}
+.btn-rm{border-color:#f5c6c6;background:#fff0f0;color:#b00}
+.btn-rm:hover{background:#ffe0e0}
+.btn-rs{border-color:#c6e8c6;background:#f0fff0;color:#060}
+.btn-rs:hover{background:#dcffdc}
+
+[draggable=true]{cursor:grab}
+[draggable=true]:active{cursor:grabbing}
+
+/* export modal */
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;align-items:center;justify-content:center}
+#modal.open{display:flex}
+.mbox{background:#1a1a1a;color:#e0e0e0;border-radius:12px;padding:22px;max-width:680px;width:92vw;max-height:85vh;display:flex;flex-direction:column;gap:10px}
+.mbox h2{font-size:14px;color:#fff;font-weight:700}
+.mbox .msub{font-size:12px;color:#888}
+.mbox textarea{flex:1;min-height:280px;background:#0d0d0d;color:#7fff80;font-family:monospace;font-size:12px;border:1px solid #333;border-radius:6px;padding:10px;resize:vertical}
+.mbtn-row{display:flex;gap:8px;flex-wrap:wrap}
+.mbtn{padding:8px 14px;border-radius:6px;border:0;cursor:pointer;font-weight:700;font-size:13px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🗂 Gallery Sort — Leather Clinic</h1>
+  <div id="stats">
+    Total: <b id="s-total">0</b>&nbsp;|&nbsp;
+    Active: <b id="s-active">0</b>&nbsp;|&nbsp;
+    Removed: <b id="s-removed">0</b>
+  </div>
+  <button class="hbtn hbtn-export" onclick="openModal()">Export JSON</button>
+</header>
+
+<div class="notice">
+  <span>🔒 First 18 images are locked</span> — cannot be moved or removed. &nbsp;
+  Drag cards or use ↑ ↓ to reorder images after #18. &nbsp;
+  Click <b>Remove</b> to exclude from export (images stay visible, greyed out).
+</div>
+
+<div id="grid"></div>
+
+<div id="modal">
+  <div class="mbox">
+    <h2>Export — Active image paths</h2>
+    <p class="msub" id="m-count"></p>
+    <textarea id="m-text" readonly></textarea>
+    <div class="mbtn-row">
+      <button class="mbtn" style="background:#3a3a3a;color:#fff" onclick="copyExport()">Copy to clipboard</button>
+      <button class="mbtn" style="background:#ef0038;color:#fff" onclick="downloadExport()">Download gallery-order.json</button>
+      <button class="mbtn" style="background:#555;color:#fff" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Config ───────────────────────────────────────────────────────────────────
+const LOCKED = 18;
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+// Source: commit f42f227 "Restore full 110-photo gallery; 3-col desktop layout"
+// Canonical de-aliased sequence — NO work-118+ alias files.
+// work-118..213 are all duplicates of work-01..117 (per f42f227 commit message).
+
+const CLIENT_SRCS = [
+  '/img/client/lc-client-extra-01.jpg',
+  '/img/client/lc-client-extra-02.jpg',
+  '/img/client/lc-client-extra-03.jpg',
+  '/img/client/lc-client-extra-04.jpg',
+  '/img/client/lc-client-extra-05.jpg',
+  '/img/client/lc-client-extra-06.jpg',
+  '/img/client/lc-client-extra-07.jpg',
+  '/img/client/lc-client-extra-08.jpg',
+  '/img/client/lc-client-extra-09.jpg',
+  '/img/client/lc-client-extra-10.jpg',
+  '/img/client/lc-client-extra-11.jpg',
+  '/img/client/lc-client-extra-12.jpg',
+  '/img/client/lc-client-extra-13.jpg',
+  '/img/client/lc-client-extra-14.jpg',
+];
+
+// 110 curated source photos (canonical curator order, no duplicates)
+const SOURCE_SEQ = [
+    2,  1,  3, 16,  4, 20,  6, 18,  7, 21,
+   25,  8, 30, 26, 29, 27, 33, 28, 32, 31,
+   24, 23, 22,  9, 36, 34, 37, 35, 38, 39,
+   51, 40, 10, 11, 52, 41, 42, 43, 44, 46,
+   45, 48, 53, 47, 49, 50, 54, 78, 77, 76,
+   75, 74, 73, 72, 71, 70, 69, 68, 67, 66,
+   65, 64, 63, 62, 61, 60, 59, 58, 57, 56,
+   55, 80, 79, 81, 82, 84, 83, 85, 86, 88,
+   87, 89, 90, 91, 95, 92, 93, 94, 96, 97,
+   98,100,101, 99,102,103,105,104,106,108,
+  107,112,109,113,111,110,115,114,116,117,
+];
+
+const SOURCE_SRCS = SOURCE_SEQ.map(
+  n => '/img/source/work-' + String(n).padStart(2, '0') + '.webp'
+);
+
+// Deduplicate by exact src string
+const seen = new Set();
+const ALL_SRCS = [...CLIENT_SRCS, ...SOURCE_SRCS].filter(s => {
+  if (seen.has(s)) return false;
+  seen.add(s); return true;
+});
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let items = ALL_SRCS.map(src => ({
+  src,
+  removed: false,
+  label: src.split('/').pop(),
+}));
+
+// ─── Drag ─────────────────────────────────────────────────────────────────────
+let dragSrc = null;
+
+// ─── Display path (relative from public/_gallery-sort/) ──────────────────────
+function dispSrc(src) {
+  return '..' + src;
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function render() {
+  const total = items.length;
+  const removed = items.filter(i => i.removed).length;
+  const active = total - removed;
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-active').textContent = active;
+  document.getElementById('s-removed').textContent = removed;
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  items.forEach((item, idx) => {
+    const locked = idx < LOCKED;
+    const card = document.createElement('div');
+    card.className = 'card' +
+      (locked ? ' locked' : '') +
+      (item.removed ? ' removed' : '');
+    card.dataset.idx = idx;
+
+    // Drag events (only for unlocked, non-removed)
+    if (!locked && !item.removed) {
+      card.draggable = true;
+      card.addEventListener('dragstart', e => {
+        dragSrc = idx;
+        e.dataTransfer.effectAllowed = 'move';
+        requestAnimationFrame(() => card.classList.add('dragging'));
+      });
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
+      });
+    }
+    if (!locked) {
+      card.addEventListener('dragover', e => {
+        if (dragSrc === null || dragSrc < LOCKED) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
+        card.classList.add('drag-over');
+      });
+      card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+      card.addEventListener('drop', e => {
+        e.preventDefault();
+        card.classList.remove('drag-over');
+        if (dragSrc === null || dragSrc === idx || dragSrc < LOCKED || idx < LOCKED) return;
+        const moved = items.splice(dragSrc, 1)[0];
+        items.splice(idx, 0, moved);
+        dragSrc = null;
+        render();
+      });
+    }
+
+    // Badge
+    const badge = document.createElement('div');
+    badge.className = 'badge';
+    badge.textContent = (locked ? '🔒 ' : '') + (idx + 1);
+    card.appendChild(badge);
+
+    // Image
+    const img = document.createElement('img');
+    img.src = dispSrc(item.src);
+    img.alt = item.label;
+    img.loading = 'lazy';
+    card.appendChild(img);
+
+    // Label
+    const lbl = document.createElement('div');
+    lbl.className = 'card-label';
+    lbl.title = item.src;
+    lbl.textContent = item.label;
+    card.appendChild(lbl);
+
+    // Controls (only for unlocked)
+    if (!locked) {
+      const ctrl = document.createElement('div');
+      ctrl.className = 'card-ctrl';
+
+      const up = document.createElement('button');
+      up.className = 'btn-up';
+      up.textContent = '↑';
+      up.title = 'Move up';
+      up.disabled = (idx <= LOCKED);
+      up.onclick = () => moveUp(idx);
+
+      const dn = document.createElement('button');
+      dn.className = 'btn-dn';
+      dn.textContent = '↓';
+      dn.title = 'Move down';
+      dn.disabled = (idx >= items.length - 1);
+      dn.onclick = () => moveDown(idx);
+
+      const rm = document.createElement('button');
+      if (item.removed) {
+        rm.textContent = 'Restore';
+        rm.className = 'btn-rs';
+      } else {
+        rm.textContent = 'Remove';
+        rm.className = 'btn-rm';
+      }
+      rm.onclick = () => toggleRemove(idx);
+
+      ctrl.appendChild(up);
+      ctrl.appendChild(dn);
+      ctrl.appendChild(rm);
+      card.appendChild(ctrl);
+    }
+
+    grid.appendChild(card);
+  });
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+function moveUp(idx) {
+  if (idx <= LOCKED) return;
+  [items[idx - 1], items[idx]] = [items[idx], items[idx - 1]];
+  render();
+}
+
+function moveDown(idx) {
+  if (idx < LOCKED || idx >= items.length - 1) return;
+  [items[idx], items[idx + 1]] = [items[idx + 1], items[idx]];
+  render();
+}
+
+function toggleRemove(idx) {
+  if (idx < LOCKED) return;
+  items[idx].removed = !items[idx].removed;
+  render();
+}
+
+// ─── Export modal ─────────────────────────────────────────────────────────────
+function openModal() {
+  const active = items.filter(i => !i.removed).map(i => i.src);
+  document.getElementById('m-text').value = JSON.stringify(active, null, 2);
+  document.getElementById('m-count').textContent =
+    active.length + ' active images (out of ' + items.length + ' total)';
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function copyExport() {
+  const ta = document.getElementById('m-text');
+  ta.select();
+  try {
+    document.execCommand('copy');
+    alert('Copied to clipboard!');
+  } catch {
+    alert('Select all text in the box and copy manually.');
+  }
+}
+
+function downloadExport() {
+  const text = document.getElementById('m-text').value;
+  const blob = new Blob([text], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gallery-order.json';
+  a.click();
+}
+
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

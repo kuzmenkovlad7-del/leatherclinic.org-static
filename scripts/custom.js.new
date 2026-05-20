@@ -3,8 +3,8 @@
     const forms = Array.from(document.querySelectorAll("form"));
     return forms.find((f) => {
       const hasSubmit = f.querySelector('button[type="submit"], input[type="submit"]');
-      const hasEmail = f.querySelector('input[type="email"], input[name*="email" i]');
-      return !!hasSubmit && !!hasEmail;
+      const hasPhone = f.querySelector('input[type="tel"], input[name*="phone" i]');
+      return !!hasSubmit && !!hasPhone;
     });
   }
 
@@ -53,9 +53,9 @@
       }
     }
 
-    // Guard: phone AND email are both required
-    if (!phone.trim() || !email.trim()) {
-      setMsg(form, "Please enter your phone number and email.", false);
+    // Guard: phone is required
+    if (!phone.trim()) {
+      setMsg(form, "Please enter your phone number.", false);
       return;
     }
 

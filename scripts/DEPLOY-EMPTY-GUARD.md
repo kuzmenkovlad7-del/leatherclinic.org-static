@@ -1,4 +1,10 @@
-# Empty Submission Guard — Server Admin Runbook
+# Phone Guard — Server Admin Runbook
+
+## Required behavior
+- Phone empty → blocked (400 missing_phone / frontend error)
+- Email only, no phone → blocked
+- Phone only → allowed
+- Phone + email → allowed
 
 ## Environment
 - Production server: 46.62.234.91
@@ -9,7 +15,7 @@
 
 ## PART A — custom.js frontend guard
 
-### Step 1: Find and back up custom.js
+### Step 1: Back up current custom.js
 
 ```bash
 TS=$(date +%Y%m%d_%H%M%S)
@@ -20,14 +26,14 @@ echo "Backup: /var/www/leatherclinic.org/custom.js.bak.$TS"
 
 ### Step 2: Deploy fixed custom.js
 
-Pull the new file from the repo (already at scripts/custom.js.new), or apply
-the patch manually. The ONLY change vs the original is these lines added in
-sendToApi(), BEFORE fd.append("name", name):
+The new file is at scripts/custom.js.new. Changes vs original:
+1. `pickForm()` now detects form by phone input (not email), so it works even if Email field is optional
+2. Guard in `sendToApi()` blocks if phone is empty:
 
 ```js
-// Guard: phone AND email are both required
-if (!phone.trim() || !email.trim()) {
-  setMsg(form, "Please enter your phone number and email.", false);
+// Guard: phone is required
+if (!phone.trim()) {
+  setMsg(form, "Please enter your phone number.", false);
   return;
 }
 ```
@@ -38,12 +44,7 @@ cp /var/www/leatherclinic-react/scripts/custom.js.new \
    /var/www/leatherclinic.org/custom.js
 ```
 
-### Step 3: Update cache-busting version param in index.html
-
-The live index.html loads:
-  <script src="/custom.js?v=20260124213841" defer></script>
-
-Update the version to today's date so browsers get the new file:
+### Step 3: Bump cache-busting version in index.html
 
 ```bash
 TS=$(date +%Y%m%d_%H%M%S)
@@ -64,15 +65,12 @@ echo "New version param: $NEW_V"
 ### Step 1: Find the handler
 
 ```bash
-# Find the Node process serving /api/leatherclinic:
 pm2 list 2>/dev/null
 pm2 show leatherclinic 2>/dev/null
 
-# Or find by port/process:
 ss -tlnp | grep -E '3000|4000|8000|8080'
 ps aux | grep node | grep -v grep
 
-# Or find by file content:
 grep -rn "leatherclinic\|api.*leatherclinic" /var/www/ /srv/ /opt/ \
      --include="*.js" --include="*.mjs" --include="*.cjs" \
      2>/dev/null | grep -v node_modules | grep -v ".git"
@@ -81,68 +79,81 @@ grep -rn "leatherclinic\|api.*leatherclinic" /var/www/ /srv/ /opt/ \
 ### Step 2: Back up the handler
 
 ```bash
-# Replace <HANDLER_PATH> with the actual path found above
 HANDLER_PATH=<HANDLER_PATH>
 TS=$(date +%Y%m%d_%H%M%S)
 cp "$HANDLER_PATH" "${HANDLER_PATH}.bak.$TS"
 echo "Backup: ${HANDLER_PATH}.bak.$TS"
 ```
 
-### Step 3: Add required-fields guard
+### Step 3: Add phone guard
 
-Find the section in the handler where it parses the multipart body and BEFORE
-it calls the n8n webhook URL, add:
+Find the section AFTER multipart body parse, BEFORE n8n forward. Add:
 
 ```js
-// Required fields guard: phone AND email are both required
-const phone = (fields.phone || '').trim();
-const email = (fields.email || '').trim();
-if (!phone || !email) {
+// Phone guard: phone is required
+const flatPhone = (fields.phone || '').trim();
+let jsonPhone = '';
+try {
+  const f = typeof fields.fields === 'string' ? JSON.parse(fields.fields) : fields.fields;
+  jsonPhone = (f?.contactForm_phoneNumber?.value || '').trim();
+} catch (_) {}
+const phone = flatPhone || jsonPhone;
+if (!phone) {
   res.writeHead(400, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ ok: false, error: 'missing_required_contact' }));
+  res.end(JSON.stringify({ ok: false, error: 'missing_phone' }));
   return;
 }
 ```
 
-The helper module at scripts/api-guard.js can be copied alongside the handler
-if you prefer to keep validation isolated.
+Or copy scripts/api-guard.js alongside the handler and use:
+
+```js
+const { isMissingPhone } = require('./api-guard');
+// ...after multipart parse...
+if (isMissingPhone(fields)) {
+  res.writeHead(400, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ ok: false, error: 'missing_phone' }));
+  return;
+}
+```
 
 ### Step 4: Restart the handler process
 
 ```bash
 pm2 restart leatherclinic   # if managed by PM2
 # or
-systemctl restart leatherclinic-api   # if systemd service
-# or whatever process manager is in use
+systemctl restart leatherclinic-api
 ```
+
+---
+
+## PART C — n8n workflow
+
+1. Open the Leather Clinic workflow in n8n
+2. Add an **IF** node before Telegram nodes:
+   - Condition: `{{ $json.phone }}` is not empty (or `{{ $json.contactForm_phoneNumber }}`)
+   - True branch → Telegram; False branch → Stop
+3. Rename the Set node label **"Submitted (Raleigh time)"** → **"Submitted (Myrtle Beach time)"**
+   (timezone stays Eastern — only the label changes)
+4. Re-enable Telegram nodes after testing
 
 ---
 
 ## TESTS
 
-### Test 1a — Both phone+email empty (expect 400, no n8n execution)
+### Test 1 — Empty submit (expect 400 / frontend block)
 
-Run from the server itself (bypasses host allowlist):
+From server (bypasses host allowlist):
 ```bash
 curl -s -X POST http://localhost:<PORT>/api/leatherclinic \
   -F "name=" -F "phone=" -F "email=" -F "zip=" -F "comments=" \
   -F "page_url=http://localhost/test" \
   -F 'fields={"short_text":{"value":""},"contactForm_phoneNumber":{"value":""},"contactForm_email":{"value":""}}'
 ```
-Expected response: `{"ok":false,"error":"missing_required_contact"}`
+Expected: `{"ok":false,"error":"missing_phone"}`
 Expected n8n: NO new execution
 
-### Test 1b — Phone only, no email (expect 400)
-
-```bash
-curl -s -X POST http://localhost:<PORT>/api/leatherclinic \
-  -F "name=" -F "phone=(843) 555-0100" -F "email=" -F "zip=" -F "comments=" \
-  -F "page_url=http://localhost/test" \
-  -F 'fields={"contactForm_phoneNumber":{"value":"(843) 555-0100"},"contactForm_email":{"value":""}}'
-```
-Expected response: `{"ok":false,"error":"missing_required_contact"}`
-
-### Test 1c — Email only, no phone (expect 400)
+### Test 2 — Email only, no phone (expect 400)
 
 ```bash
 curl -s -X POST http://localhost:<PORT>/api/leatherclinic \
@@ -150,44 +161,50 @@ curl -s -X POST http://localhost:<PORT>/api/leatherclinic \
   -F "page_url=http://localhost/test" \
   -F 'fields={"contactForm_phoneNumber":{"value":""},"contactForm_email":{"value":"x@example.com"}}'
 ```
-Expected response: `{"ok":false,"error":"missing_required_contact"}`
+Expected: `{"ok":false,"error":"missing_phone"}`
 
-### Test 2 — Valid submit (expect 200, n8n executes)
+### Test 3 — Phone only (expect 200, n8n executes)
 
-⚠️  BEFORE THIS TEST: Disable Telegram nodes in n8n to avoid client notification.
-In n8n: open the Leather Clinic workflow → right-click each Telegram node → Disable.
+⚠️  BEFORE THIS TEST: Disable Telegram nodes in n8n.
+In n8n: open workflow → right-click each Telegram node → Disable.
+
+```bash
+curl -s -X POST http://localhost:<PORT>/api/leatherclinic \
+  -F "name=" -F "phone=(843) 555-0199" -F "email=" -F "zip=29579" -F "comments=Test request. Please ignore." \
+  -F "page_url=http://localhost/test" \
+  -F 'fields={"contactForm_phoneNumber":{"value":"(843) 555-0199"},"contactForm_email":{"value":""}}'
+```
+Expected: `{"ok":true}`
+Expected n8n: execution visible, phone = `(843) 555-0199`
+
+Re-enable Telegram nodes after confirming.
+
+### Test 4 — Phone + email (expect 200)
 
 ```bash
 curl -s -X POST http://localhost:<PORT>/api/leatherclinic \
   -F "name=Server Test" \
-  -F "phone=(843) 555-0100" \
+  -F "phone=(843) 555-0199" \
   -F "email=servertest@example.com" \
-  -F "zip=29577" \
+  -F "zip=29579" \
   -F "comments=Empty guard test. Please ignore." \
   -F "page_url=http://localhost/test" \
-  -F 'fields={"short_text":{"value":"Server Test"},"contactForm_phoneNumber":{"value":"(843) 555-0100"},"contactForm_email":{"value":"servertest@example.com"}}'
+  -F 'fields={"short_text":{"value":"Server Test"},"contactForm_phoneNumber":{"value":"(843) 555-0199"},"contactForm_email":{"value":"servertest@example.com"}}'
 ```
-Expected response: `{"ok":true}` (or whatever the handler currently returns on success)
-Expected n8n: execution visible, all field values non-empty
+Expected: `{"ok":true}`
 
-Re-enable Telegram nodes after confirming n8n received correct values.
-
-### Test 3 — Live browser form validation
+### Test 5 — Live browser form
 
 1. Open https://leatherclinic.org
-2. Scroll to the form
-3. Click "Request a quote" without filling any fields
-4. Expected: red message "Please enter your phone number and email." appears
-5. Expected: no request sent to /api/leatherclinic (check browser Network tab)
-6. Fill phone only, submit — same error message, no request sent
-7. Fill email only, submit — same error message, no request sent
-8. Fill both phone and email, submit — request sent (200 OK)
+2. Submit with no fields → error "Please enter your phone number." — no request in Network tab
+3. Fill email only, submit → same error, no request
+4. Fill phone only, submit → request fires (200)
+5. Email label shows no asterisk (*) — optional
 
 ---
 
 ## Rollback
 
-If anything breaks:
 ```bash
 cp /var/www/leatherclinic.org/custom.js.bak.$TS \
    /var/www/leatherclinic.org/custom.js
@@ -196,5 +213,5 @@ cp /var/www/leatherclinic.org/index.html.bak.$TS \
    /var/www/leatherclinic.org/index.html
 
 cp "${HANDLER_PATH}.bak.$TS" "$HANDLER_PATH"
-pm2 restart leatherclinic   # or systemctl restart
+pm2 restart leatherclinic
 ```

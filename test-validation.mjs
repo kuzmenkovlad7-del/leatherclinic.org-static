@@ -1,4 +1,4 @@
-// Tests that the validation guard blocks submission when phone or email is missing.
+// Tests that the validation guard requires phone (email is optional).
 // Run: node test-validation.mjs
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import { createServer } from 'vite';
@@ -42,26 +42,30 @@ async function main() {
   const cases = [
     {
       label: 'A — both empty → blocked',
-      fill: async (p) => { /* leave phone and email empty */ },
+      fill: async (p) => { /* leave all fields empty */ },
       expectBlocked: true,
+      expectMsg: 'Please enter your phone number.',
     },
     {
-      label: 'B — phone only (no email) → blocked',
-      fill: async (p) => { await p.fill('#phone', '(843) 555-0100'); },
-      expectBlocked: true,
-    },
-    {
-      label: 'C — email only (no phone) → blocked',
+      label: 'B — email only, no phone → blocked',
       fill: async (p) => { await p.fill('#email', 'x@example.com'); },
       expectBlocked: true,
+      expectMsg: 'Please enter your phone number.',
     },
     {
-      label: 'D — both phone+email → allowed (request fires)',
+      label: 'C — phone only (no email) → allowed',
+      fill: async (p) => { await p.fill('#phone', '(843) 555-0199'); },
+      expectBlocked: false,
+      expectMsg: null,
+    },
+    {
+      label: 'D — phone + email → allowed',
       fill: async (p) => {
-        await p.fill('#phone', '(843) 555-0100');
+        await p.fill('#phone', '(843) 555-0199');
         await p.fill('#email', 'x@example.com');
       },
       expectBlocked: false,
+      expectMsg: null,
     },
   ];
 
@@ -69,8 +73,9 @@ async function main() {
   for (const c of cases) {
     const r = await runCase(page, c.label, c.fill);
     const blocked = !r.requestFired;
-    const pass = blocked === c.expectBlocked;
-    results.push({ ...r, expectBlocked: c.expectBlocked, pass });
+    const blockPass = blocked === c.expectBlocked;
+    const msgPass = c.expectMsg === null ? true : r.msgText === c.expectMsg;
+    results.push({ ...r, expectBlocked: c.expectBlocked, expectMsg: c.expectMsg, pass: blockPass && msgPass });
   }
 
   await browser.close();
@@ -82,7 +87,7 @@ async function main() {
     const icon = r.pass ? '✅' : '❌';
     const blockedStr = !r.requestFired ? 'BLOCKED' : 'FIRED  ';
     console.log(`${icon} ${r.label}`);
-    console.log(`   request: ${blockedStr}  msg: ${JSON.stringify(r.msgText)}`);
+    console.log(`   request: ${blockedStr}  msg: ${JSON.stringify(r.msgText)}${r.expectMsg !== null ? '  (expected: ' + JSON.stringify(r.expectMsg) + ')' : ''}`);
     if (!r.pass) allPass = false;
   }
   console.log('\n' + (allPass ? '✅ ALL PASSED' : '❌ SOME FAILED'));

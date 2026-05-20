@@ -18,7 +18,7 @@ export default function Footer() {
 
           <div className="footer__col">
             <p className="footer__heading">Address</p>
-            <p className="footer__text">Myrtle Beach, SC 29577</p>
+            <p className="footer__text">Myrtle Beach, SC 29579</p>
             <p className="footer__text">United States</p>
           </div>
 
@@ -32,7 +32,7 @@ export default function Footer() {
 
       <div className="footer__bottom wrap">
         <p>© {new Date().getFullYear()} Leather Clinic LLC. All rights reserved.</p>
-        <p>Serving Myrtle Beach, SC and surrounding areas.</p>
+        <p>Serving Myrtle Beach, SC and South Carolina.</p>
       </div>
     </footer>
   );

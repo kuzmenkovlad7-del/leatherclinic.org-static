@@ -71,6 +71,11 @@ export default function QuoteForm() {
     const zip      = zipRef.current?.value?.trim()      || '';
     const comments = commentsRef.current?.value?.trim() || '';
 
+    if (!phone || !email) {
+      setStatus('missing_contact');
+      return;
+    }
+
     const fieldsJson = JSON.stringify({
       short_text: { title: 'Name', type: 'short_text', value: name },
       contactForm_phoneNumber: { title: 'Phone', type: 'phone', value: phone },
@@ -136,7 +141,7 @@ export default function QuoteForm() {
             </div>
             <div className="form-group">
               <label htmlFor="zip">Zip Code</label>
-              <input ref={zipRef} id="zip" type="text" placeholder="29577" defaultValue="" />
+              <input ref={zipRef} id="zip" type="text" placeholder="29579" defaultValue="" />
             </div>
           </div>
 
@@ -158,6 +163,7 @@ export default function QuoteForm() {
           </button>
 
           {status === 'success' && <p className="form-msg form-msg--success">Sent successfully ✅</p>}
+          {status === 'missing_contact' && <p className="form-msg form-msg--error">Please enter your phone number and email.</p>}
           {status === 'error' && <p className="form-msg form-msg--error">Could not send. Please call or text us.</p>}
         </form>
       </div>

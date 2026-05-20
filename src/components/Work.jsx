@@ -116,8 +116,7 @@ export default function Work() {
           <p className="lc-work-eyebrow">OUR WORK</p>
           <h2 className="lc-work-title">Before &amp; After Work</h2>
           <p className="lc-work-subtitle">
-            Every job done on-site in Myrtle Beach, SC and surrounding areas.
-          </p>
+            Every job done on-site in Myrtle Beach, SC and surrounding South Carolina areas.</p>
         </div>
 
         <div className="lc-work-carousel" aria-label="Leather Clinic project photo carousel">

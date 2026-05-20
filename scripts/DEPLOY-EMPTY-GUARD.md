@@ -25,9 +25,9 @@ the patch manually. The ONLY change vs the original is these lines added in
 sendToApi(), BEFORE fd.append("name", name):
 
 ```js
-// Guard: reject if no contact info and no files
-if (!phone.trim() && !email.trim() && !comments.trim() && files.length === 0) {
-  setMsg(form, "Please enter your phone number or email.", false);
+// Guard: phone AND email are both required
+if (!phone.trim() || !email.trim()) {
+  setMsg(form, "Please enter your phone number and email.", false);
   return;
 }
 ```
@@ -88,21 +88,18 @@ cp "$HANDLER_PATH" "${HANDLER_PATH}.bak.$TS"
 echo "Backup: ${HANDLER_PATH}.bak.$TS"
 ```
 
-### Step 3: Add empty-submission guard
+### Step 3: Add required-fields guard
 
 Find the section in the handler where it parses the multipart body and BEFORE
 it calls the n8n webhook URL, add:
 
 ```js
-// Empty submission guard
-const phone    = (fields.phone    || '').trim();
-const email    = (fields.email    || '').trim();
-const comments = (fields.comments || '').trim();
-const hasFile  = !!(fields.file1 || fields.file2 || fields.file3 ||
-                    (Array.isArray(fields.files) && fields.files.length));
-if (!phone && !email && !comments && !hasFile) {
+// Required fields guard: phone AND email are both required
+const phone = (fields.phone || '').trim();
+const email = (fields.email || '').trim();
+if (!phone || !email) {
   res.writeHead(400, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ ok: false, error: 'empty_submission' }));
+  res.end(JSON.stringify({ ok: false, error: 'missing_required_contact' }));
   return;
 }
 ```
@@ -123,7 +120,7 @@ systemctl restart leatherclinic-api   # if systemd service
 
 ## TESTS
 
-### Test 1 — Empty submit (expect 400, no n8n execution)
+### Test 1a — Both phone+email empty (expect 400, no n8n execution)
 
 Run from the server itself (bypasses host allowlist):
 ```bash
@@ -132,8 +129,28 @@ curl -s -X POST http://localhost:<PORT>/api/leatherclinic \
   -F "page_url=http://localhost/test" \
   -F 'fields={"short_text":{"value":""},"contactForm_phoneNumber":{"value":""},"contactForm_email":{"value":""}}'
 ```
-Expected response: `{"ok":false,"error":"empty_submission"}`
+Expected response: `{"ok":false,"error":"missing_required_contact"}`
 Expected n8n: NO new execution
+
+### Test 1b — Phone only, no email (expect 400)
+
+```bash
+curl -s -X POST http://localhost:<PORT>/api/leatherclinic \
+  -F "name=" -F "phone=(843) 555-0100" -F "email=" -F "zip=" -F "comments=" \
+  -F "page_url=http://localhost/test" \
+  -F 'fields={"contactForm_phoneNumber":{"value":"(843) 555-0100"},"contactForm_email":{"value":""}}'
+```
+Expected response: `{"ok":false,"error":"missing_required_contact"}`
+
+### Test 1c — Email only, no phone (expect 400)
+
+```bash
+curl -s -X POST http://localhost:<PORT>/api/leatherclinic \
+  -F "name=" -F "phone=" -F "email=x@example.com" -F "zip=" -F "comments=" \
+  -F "page_url=http://localhost/test" \
+  -F 'fields={"contactForm_phoneNumber":{"value":""},"contactForm_email":{"value":"x@example.com"}}'
+```
+Expected response: `{"ok":false,"error":"missing_required_contact"}`
 
 ### Test 2 — Valid submit (expect 200, n8n executes)
 
@@ -155,13 +172,16 @@ Expected n8n: execution visible, all field values non-empty
 
 Re-enable Telegram nodes after confirming n8n received correct values.
 
-### Test 3 — Live browser empty form
+### Test 3 — Live browser form validation
 
 1. Open https://leatherclinic.org
 2. Scroll to the form
 3. Click "Request a quote" without filling any fields
-4. Expected: red message "Please enter your phone number or email." appears
+4. Expected: red message "Please enter your phone number and email." appears
 5. Expected: no request sent to /api/leatherclinic (check browser Network tab)
+6. Fill phone only, submit — same error message, no request sent
+7. Fill email only, submit — same error message, no request sent
+8. Fill both phone and email, submit — request sent (200 OK)
 
 ---
 

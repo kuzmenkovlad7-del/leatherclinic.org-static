@@ -53,9 +53,9 @@
       }
     }
 
-    // Guard: reject if no contact info and no files
-    if (!phone.trim() && !email.trim() && !comments.trim() && files.length === 0) {
-      setMsg(form, "Please enter your phone number or email.", false);
+    // Guard: phone AND email are both required
+    if (!phone.trim() || !email.trim()) {
+      setMsg(form, "Please enter your phone number and email.", false);
       return;
     }
 
